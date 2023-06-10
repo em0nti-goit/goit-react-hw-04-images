@@ -8,7 +8,7 @@ const notificationsRootRef = document.querySelector('#notifications-root');
 function Notification({ type, onClose, children }) {
   return createPortal(
     <ToastContainer position="top-end" className="p-3">
-      <Toast bg={type} delay={3000} autohide onClose={onClose}>
+      <Toast bg={type} delay={5000} autohide onClose={onClose}>
         <Toast.Header>
           <strong className="me-auto text-capitalize">{type}</strong>
         </Toast.Header>

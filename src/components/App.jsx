@@ -4,6 +4,7 @@ import { fetchImages } from '../api/fetch-data';
 import SearchForm from './SearchForm/SearchForm';
 import Searchbar from './Searchbar/Searchbar';
 import Notification from './Notification';
+import ImageGallery from './ImageGallery/ImageGallery';
 
 const NOTIFICATION_TYPE = {
   success: 'success',
@@ -26,41 +27,66 @@ export class App extends Component {
 
   componentDidUpdate(_, prevState) {
     const { query, page } = this.state;
+
     if (prevState.query !== query) {
-      fetchImages(query, page).then(data=>);
+      fetchImages(query, page).then(data => {
+        console.log('data :>> ', data);
+
+        if (!data.totalHits) {
+          this.showNotification(
+            NOTIFICATION_TYPE.info,
+            'Sorry, there are no images matching your search query. Please try again.'
+          );
+          return;
+        }
+
+        this.setState({ images: data.hits });
+      });
+      //---/fetchImages----
     }
   }
 
-  handleSearchFormSubmit = query => {
-    if (!query) {
-      this.setState({
-        notification: {
-          type: NOTIFICATION_TYPE.warning,
-          message: 'Please, input some search query',
-          show: true,
-        },
-      });
-      return;
-    }
-    this.setState({ query });
+  showNotification = (type, message) => {
+    this.setState({
+      notification: {
+        type,
+        message,
+        show: true,
+      },
+    });
   };
 
   closeNotification = () => {
     this.setState({ notification: { show: false } });
   };
 
+  handleSearchFormSubmit = query => {
+    if (!query) {
+      this.showNotification(
+        NOTIFICATION_TYPE.warning,
+        'Please, input some search query.'
+      );
+      return;
+    }
+    this.setState({ query });
+  };
+
   render() {
-    const { notification } = this.state;
+    const { images, notification } = this.state;
     return (
       <div className={styles.app}>
         <Searchbar>
           <SearchForm onSubmit={this.handleSearchFormSubmit} />
         </Searchbar>
         {notification.show && (
-          <Notification type={notification.type} onClose={this.closeNotification}>
+          <Notification
+            type={notification.type}
+            onClose={this.closeNotification}
+          >
             {notification.message}
           </Notification>
         )}
+        {images && <ImageGallery images={images} />}
       </div>
     );
   }
