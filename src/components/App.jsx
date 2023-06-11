@@ -16,7 +16,7 @@ const NOTIFICATION_TYPE = {
 
 export class App extends Component {
   state = {
-    images: null,
+    images: [],
     query: '',
     page: 1,
     notification: {
@@ -26,40 +26,6 @@ export class App extends Component {
     },
     isLoadMore: false,
   };
-
-  componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
-
-    if (prevState.query !== query) {
-      fetchImages(query, page)
-        .then(data => {
-          console.log('data :>> ', data);
-
-          if (!data.totalHits) {
-            this.showNotification(
-              NOTIFICATION_TYPE.info,
-              'Sorry, there are no images matching your search query. Please try again.'
-            );
-            return;
-          }
-
-          this.setState({ images: data.hits });
-
-          if (data.totalHits > IMAGES_PER_PAGE) {
-            this.displayLoadMoreButton(true);
-          }
-        })
-        .catch(error => {
-          console.error('Fetch error:>> ', error);
-          this.showNotification(
-            NOTIFICATION_TYPE.error,
-            `Sorry, there is fetching error: ${error.message}. Please try again.`
-          );
-          return;
-        });
-      //---/fetchImages----
-    }
-  }
 
   displayLoadMoreButton = isShow => {
     this.setState({ isLoadMore: isShow });
@@ -79,6 +45,14 @@ export class App extends Component {
     this.setState({ notification: { show: false } });
   };
 
+  handleFetchError = error => {
+    console.error('Fetch error:>> ', error);
+    this.showNotification(
+      NOTIFICATION_TYPE.error,
+      `Sorry, there is fetching error: ${error.message}. Please try again.`
+    );
+  };
+
   handleSearchFormSubmit = query => {
     if (!query) {
       this.showNotification(
@@ -87,7 +61,52 @@ export class App extends Component {
       );
       return;
     }
-    this.setState({ query });
+    this.setState({ query }, () => {
+      const { query, page } = this.state;
+      fetchImages(query, page)
+        .then(data => {
+          console.log('data :>> ', data);
+
+          if (!data.totalHits) {
+            this.showNotification(
+              NOTIFICATION_TYPE.info,
+              'Sorry, there are no images matching your search query. Please try again.'
+            );
+            return;
+          }
+
+          this.setState({ images: data.hits, isLoadMore: false });
+
+          if (data.totalHits > IMAGES_PER_PAGE) {
+            this.displayLoadMoreButton(true);
+          }
+        })
+        .catch(error => {
+          this.handleFetchError(error);
+        });
+    });
+  };
+
+  handleOnClickLoadMoreButton = () => {
+    this.setState(
+      prevState => ({ page: prevState.page + 1 }),
+      () => {
+        const { query, page } = this.state;
+        fetchImages(query, page)
+          .then(data => {
+            this.setState(prevState => ({
+              images: [...prevState.images, ...data.hits],
+            }));
+
+            if (IMAGES_PER_PAGE * page >= data.totalHits) {
+              this.displayLoadMoreButton(false);
+            }
+          })
+          .catch(error => {
+            this.handleFetchError(error);
+          });
+      }
+    );
   };
 
   render() {
@@ -105,8 +124,10 @@ export class App extends Component {
             {notification.message}
           </Notification>
         )}
-        {images && <ImageGallery images={images} />}
-        {isLoadMore && <Button>Load more</Button>}
+        <ImageGallery images={images} />
+        {isLoadMore && (
+          <Button onClick={this.handleOnClickLoadMoreButton}>Load more</Button>
+        )}
       </div>
     );
   }
