@@ -8,9 +8,10 @@ const ImageGalleryItem = ({
   webformatHeight,
   largeImageURL,
   tags,
+  imgOnClick
 }) => {
   return (
-    <li className={styles.galleryItem}>
+    <li className={styles.galleryItem} onClick={()=>imgOnClick(largeImageURL)}>
       <img
         className={styles.galleryItemImage}
         src={webformatURL}
