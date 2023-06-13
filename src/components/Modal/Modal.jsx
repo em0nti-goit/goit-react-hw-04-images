@@ -9,6 +9,7 @@ const modalRootRef = document.querySelector('#modal-root');
 class Modal extends React.Component {
   static propTypes = {
     url: PropTypes.string.isRequired,
+    onClose: PropTypes.func.isRequired
   };
 
   componentDidMount() {

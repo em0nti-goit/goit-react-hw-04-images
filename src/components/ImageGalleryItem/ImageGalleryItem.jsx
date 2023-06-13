@@ -29,6 +29,7 @@ ImageGalleryItem.propTypes = {
   webformatHeight: PropTypes.number,
   largeImageURL: PropTypes.string,
   tags: PropTypes.string,
+  imgOnClick: PropTypes.func
 };
 
 export default ImageGalleryItem;

@@ -1,9 +1,10 @@
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import styles from './SearchForm.module.css';
 
 export default class SearchForm extends Component {
-  // static propTypes = { second: third };
+  static propTypes = { onSubmit: PropTypes.func.isRequired };
+
   state = {
     input: '',
   };

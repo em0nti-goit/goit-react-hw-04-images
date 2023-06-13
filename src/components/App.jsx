@@ -43,7 +43,7 @@ export class App extends PureComponent {
 
       fetchImages(query)
         .then(data => {
-          console.log('data :>> ', data);
+          // console.log('data :>> ', data);
 
           if (!data.totalHits) {
             this.showNotification(
