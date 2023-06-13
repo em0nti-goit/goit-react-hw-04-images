@@ -6,10 +6,13 @@
   left: 0;
   position: sticky;
   z-index: 999;
+
   display: flex;
   justify-content: center;
   align-items: center;
+
   min-height: 64px;
+  min-width: 100vw;
   padding-right: 24px;
   padding-left: 24px;
   padding-top: 12px;
