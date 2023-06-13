@@ -6,22 +6,35 @@ import { CloseButton } from 'react-bootstrap';
 
 const modalRootRef = document.querySelector('#modal-root');
 
-const Modal = ({ url, onClose }) => {
-  return createPortal(
-    <div className={styles.overlay}>
-      <div className={`${styles.modal} w-75`}>
-        <img src={url} alt="" />
-      </div>
-      <div className="position-absolute top-0 end-0 p-3">
-        <CloseButton onClick={onClose} variant="white" />
-      </div>
-    </div>,
-    modalRootRef
-  );
-};
+class Modal extends React.Component {
+  static propTypes = {
+    url: PropTypes.string.isRequired,
+  };
 
-Modal.propTypes = {
-  url: PropTypes.string.isRequired,
-};
+  componentDidMount() {
+    // document.body.classList.add('no-scroll');
+    document.body.style.position = 'fixed';
+  }
+
+  componentWillUnmount() {
+    // document.body.classList.remove('no-scroll');
+    document.body.style.position = '';
+  }
+
+  render() {
+    const { url, onClose } = this.props;
+    return createPortal(
+      <div className={styles.overlay}>
+        <div className={`${styles.modal}`}>
+          <img src={url} alt="" />
+        </div>
+        <div className="position-absolute top-0 end-0 p-3">
+          <CloseButton onClick={onClose} variant="white" />
+        </div>
+      </div>,
+      modalRootRef
+    );
+  }
+}
 
 export default Modal;
