@@ -3,11 +3,11 @@ import PropTypes from 'prop-types';
 import styles from './ImageGallery.module.css';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 
-const ImageGallery = ({ images, imgOnClick }) => {
+const ImageGallery = ({ images }) => {
   return (
     <ul className={styles.gallery}>
       {images.map(({ id, ...image }) => {
-        return <ImageGalleryItem key={id} {...image} imgOnClick={imgOnClick} />;
+        return <ImageGalleryItem key={id} {...image} />;
       })}
     </ul>
   );

@@ -7,7 +7,6 @@ import Notification from './Notification';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import { Loader } from './Loader/Loader';
-import Modal from './Modal/Modal';
 
 const NOTIFICATION_TYPE = {
   success: 'success',
@@ -26,10 +25,6 @@ const INITIAL_STATE = {
     type: NOTIFICATION_TYPE.info,
     message: '',
     show: false,
-  },
-  modal: {
-    show: false,
-    largeImageUrl: '',
   },
 };
 
@@ -105,19 +100,6 @@ export class App extends PureComponent {
     );
   };
 
-  closeModal = () => {
-    this.setState({ modal: { show: false } });
-  };
-
-  handleOnClickImage = url => {
-    this.setState({
-      modal: {
-        show: true,
-        largeImageUrl: url,
-      },
-    });
-  };
-
   displayLoadMoreButton = isShow => {
     this.setState({ isLoadMore: isShow });
   };
@@ -137,7 +119,7 @@ export class App extends PureComponent {
   };
 
   render() {
-    const { images, notification, isLoadMore, isLoader, modal } = this.state;
+    const { images, notification, isLoadMore, isLoader } = this.state;
     return (
       <div className={styles.app}>
         <Searchbar>
@@ -156,9 +138,7 @@ export class App extends PureComponent {
         {isLoadMore && (
           <Button onClick={this.handleOnClickLoadMoreButton}>Load more</Button>
         )}
-        {modal.show && (
-          <Modal url={modal.largeImageUrl} onClose={this.closeModal} />
-        )}
+        
       </div>
     );
   }
