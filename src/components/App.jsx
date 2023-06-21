@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './App.module.css';
 import { fetchImages, IMAGES_PER_PAGE } from '../api/fetch-data';
 import SearchForm from './SearchForm/SearchForm';
@@ -6,7 +6,7 @@ import Searchbar from './Searchbar/Searchbar';
 import Notification from './Notification';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
-import { Loader } from './Loader/Loader';
+import Loader from './Loader/Loader';
 
 const NOTIFICATION_TYPE = {
   success: 'success',
@@ -15,131 +15,103 @@ const NOTIFICATION_TYPE = {
   info: 'info',
 };
 
-const INITIAL_STATE = {
-  images: [],
-  query: '',
-  page: 1,
-  isLoadMore: false,
-  isLoader: false,
-  notification: {
+const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [notification, setNotification] = useState({
     type: NOTIFICATION_TYPE.info,
     message: '',
-    show: false,
-  },
-};
+  });
+  const [showNotification, setShowNotification] = useState(false);
+  const [isLoader, setIsLoader] = useState(false);
+  const [isLoadMoreBtn, setIsLoadMore] = useState(false);
 
-export class App extends PureComponent {
-  state = {
-    ...INITIAL_STATE,
+  const handleNotification = (type, message) => {
+    setNotification({ type, message });
+    setShowNotification(true);
   };
 
-  componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
+  const fetchData = useCallback(async () => {
+    setIsLoader(true);
 
-    // Only fetch new images when query has changed or page has incremented
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ isLoader: true });
+    try {
+      const data = await fetchImages(query, page);
 
-      fetchImages(query, page)
-        .then(data => {
-          console.log('data :>> ', data);
+      if (!data.totalHits) {
+        handleNotification(
+          NOTIFICATION_TYPE.info,
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        setIsLoader(false);
+        return;
+      }
 
-          if (!data.totalHits) {
-            this.showNotification(
-              NOTIFICATION_TYPE.info,
-              'Sorry, there are no images matching your search query. Please try again.'
-            );
-            return;
-          }
+      setImages(prevImages => [...prevImages, ...data.hits]);
 
-          this.setState(prevState => ({
-            images: [...prevState.images, ...data.hits],
-          }));
+      if (data.totalHits > IMAGES_PER_PAGE) {
+        setIsLoadMore(true);
+      }
 
-          if (data.totalHits > IMAGES_PER_PAGE) {
-            this.displayLoadMoreButton(true);
-          }
-
-          if (IMAGES_PER_PAGE * page >= data.totalHits) {
-            this.displayLoadMoreButton(false);
-            this.showNotification(
-              NOTIFICATION_TYPE.info,
-              "We're sorry, but you've reached the end of search results."
-            );
-          }
-        })
-        .catch(error => {
-          this.handleFetchError(error);
-        })
-        .finally(() => {
-          this.setState({ isLoader: false });
-        });
+      if (IMAGES_PER_PAGE * page >= data.totalHits) {
+        setIsLoadMore(false);
+        handleNotification(
+          NOTIFICATION_TYPE.info,
+          "We're sorry, but you've reached the end of search results."
+        );
+      }
+    } catch (error) {
+      console.error('Fetch error:>> ', error);
+      handleNotification(
+        NOTIFICATION_TYPE.error,
+        `Sorry, there is fetching error: ${error.message}. Please try again.`
+      );
+    } finally {
+      setIsLoader(false);
     }
-  }
+  }, [query, page]);
 
-  handleSearchFormSubmit = query => {
-    if (!query) {
-      this.showNotification(
+  useEffect(() => {
+    if (query) fetchData();
+  }, [fetchData, query, page]);
+
+  const handleSearchFormSubmit = inputQuery => {
+    if (!inputQuery) {
+      handleNotification(
         NOTIFICATION_TYPE.warning,
         'Please, input some search query.'
       );
       return;
     }
-    this.setState({ ...INITIAL_STATE, query });
+    setQuery(inputQuery);
+    setPage(1);
+    setImages([]);
   };
 
-  handleOnClickLoadMoreButton = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const handleClickLoadMoreButton = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  handleFetchError = error => {
-    console.error('Fetch error:>> ', error);
-    this.showNotification(
-      NOTIFICATION_TYPE.error,
-      `Sorry, there is fetching error: ${error.message}. Please try again.`
-    );
-  };
+  return (
+    <div className={styles.app}>
+      <Searchbar>
+        <SearchForm onSubmit={handleSearchFormSubmit} />
+      </Searchbar>
+      {showNotification && (
+        <Notification
+          type={notification.type}
+          onClose={() => setShowNotification(false)}
+        >
+          {notification.message}
+        </Notification>
+      )}
+      <ImageGallery images={images} />
+      {isLoader && <Loader />}
+      {isLoadMoreBtn && (
+        <Button onClick={handleClickLoadMoreButton}>Load more</Button>
+      )}
+    </div>
+  );
+};
 
-  displayLoadMoreButton = isShow => {
-    this.setState({ isLoadMore: isShow });
-  };
-
-  showNotification = (type, message) => {
-    this.setState({
-      notification: {
-        type,
-        message,
-        show: true,
-      },
-    });
-  };
-
-  closeNotification = () => {
-    this.setState({ notification: { show: false } });
-  };
-
-  render() {
-    const { images, notification, isLoadMore, isLoader } = this.state;
-    return (
-      <div className={styles.app}>
-        <Searchbar>
-          <SearchForm onSubmit={this.handleSearchFormSubmit} />
-        </Searchbar>
-        {notification.show && (
-          <Notification
-            type={notification.type}
-            onClose={this.closeNotification}
-          >
-            {notification.message}
-          </Notification>
-        )}
-        <ImageGallery images={images} imgOnClick={this.handleOnClickImage} />
-        {isLoader && <Loader />}
-        {isLoadMore && (
-          <Button onClick={this.handleOnClickLoadMoreButton}>Load more</Button>
-        )}
-        
-      </div>
-    );
-  }
-}
+export default App;
