@@ -7,7 +7,6 @@ import { CloseButton } from 'react-bootstrap';
 const modalRootRef = document.querySelector('#modal-root');
 
 const Modal = ({ url, onClose }) => {
-  console.log('Modal', Date.now());
   useEffect(() => {
     const handlerKeyDownEsc = e => {
       if (e.key === 'Escape') {
@@ -17,12 +16,12 @@ const Modal = ({ url, onClose }) => {
 
     document.body.style.position = 'fixed';
     window.addEventListener('keydown', handlerKeyDownEsc);
-    console.log('set eventListener');
+    // console.log('set eventListener');
 
     return () => {
       document.body.style.position = '';
       window.removeEventListener('keydown', handlerKeyDownEsc);
-      console.log('remove eventListener');
+      // console.log('remove eventListener');
     };
   }, [onClose]);
 
