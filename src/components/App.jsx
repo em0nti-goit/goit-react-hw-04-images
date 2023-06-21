@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './App.module.css';
 import { fetchImages, IMAGES_PER_PAGE } from '../api/fetch-data';
 import SearchForm from './SearchForm/SearchForm';
@@ -32,48 +32,49 @@ const App = () => {
     setShowNotification(true);
   };
 
-  const fetchData = useCallback(async () => {
-    setIsLoader(true);
-
-    try {
-      const data = await fetchImages(query, page);
-
-      if (!data.totalHits) {
-        handleNotification(
-          NOTIFICATION_TYPE.info,
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-        setIsLoader(false);
-        return;
-      }
-
-      setImages(prevImages => [...prevImages, ...data.hits]);
-
-      if (data.totalHits > IMAGES_PER_PAGE) {
-        setIsLoadMore(true);
-      }
-
-      if (IMAGES_PER_PAGE * page >= data.totalHits) {
-        setIsLoadMore(false);
-        handleNotification(
-          NOTIFICATION_TYPE.info,
-          "We're sorry, but you've reached the end of search results."
-        );
-      }
-    } catch (error) {
-      console.error('Fetch error:>> ', error);
-      handleNotification(
-        NOTIFICATION_TYPE.error,
-        `Sorry, there is fetching error: ${error.message}. Please try again.`
-      );
-    } finally {
-      setIsLoader(false);
-    }
-  }, [query, page]);
-
   useEffect(() => {
-    if (query) fetchData();
-  }, [fetchData, query, page]);
+    if (!query) return;
+
+    const fetchData = async () => {
+      setIsLoader(true);
+
+      try {
+        const data = await fetchImages(query, page);
+
+        if (!data.totalHits) {
+          handleNotification(
+            NOTIFICATION_TYPE.info,
+            'Sorry, there are no images matching your search query. Please try again.'
+          );
+          setIsLoader(false);
+          return;
+        }
+
+        setImages(prevImages => [...prevImages, ...data.hits]);
+
+        if (data.totalHits > IMAGES_PER_PAGE) {
+          setIsLoadMore(true);
+        }
+
+        if (IMAGES_PER_PAGE * page >= data.totalHits) {
+          setIsLoadMore(false);
+          handleNotification(
+            NOTIFICATION_TYPE.info,
+            "We're sorry, but you've reached the end of search results."
+          );
+        }
+      } catch (error) {
+        console.error('Fetch error:>> ', error);
+        handleNotification(
+          NOTIFICATION_TYPE.error,
+          `Sorry, there is fetching error: ${error.message}. Please try again.`
+        );
+      } finally {
+        setIsLoader(false);
+      }
+    };
+    fetchData();
+  }, [query, page]);
 
   const handleSearchFormSubmit = inputQuery => {
     if (!inputQuery) {
